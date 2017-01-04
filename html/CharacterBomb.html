@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   	<head>
-  		<!-- Latest compiled Bootstrap -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/css/bootstrap.min.css" integrity="sha384-y3tfxAZXuh4HwSYylfB+J125MxIs6mR5FOHamPBG064zB+AFeWH94NdvaCBm8qnd" crossorigin="anonymous">
-
-  		<!-- Latest compiled and minified CSS -->
-		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
 		<!-- jQuery library -->
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
 		<!-- Angular JS -->
-		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-animate.js"></script>
+    	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-sanitize.js"></script>
+    	<script src="https://angular-ui.github.io/bootstrap/ui-bootstrap-tpls-2.4.0.js"></script>
+
+    	<!-- Latest compiled Bootstrap -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.2/css/bootstrap.min.css" integrity="sha384-y3tfxAZXuh4HwSYylfB+J125MxIs6mR5FOHamPBG064zB+AFeWH94NdvaCBm8qnd" crossorigin="anonymous">
+
+  		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
 		<!-- Custome JS Routines -->
 		<script type="text/javascript" src="../js/CharacterBomb.js"></script>
@@ -26,7 +30,42 @@
   	<body>
   	<div ng-app="CharacterBomb">
 
-  		<nav class="navbar navbar-inverse">
+  	<script type="text/ng-template" id="myModalContent.html">
+	  	<div class="modal-header">
+	    	<h3 class="modal-title" id="modal-title">{{$ctrl.character.name}}</h3>
+		</div>
+		<div class="modal-body" id="modal-body">
+
+			<h4>Description</h4>
+			<p>{{$ctrl.character.deck}}</p>
+
+			<h4>Gender</h4>
+			<p>{{$ctrl.character.gender}}</p>
+
+			<h4>Friends</h4>
+			<ul ng-repeat="x in $ctrl.character.friends">
+				<li>{{x.name}}</li>
+			</ul>
+
+			<h4>Enemies</h4>
+			<ul ng-repeat="x in $ctrl.character.enemies">
+				<li>{{x.name}}</li>
+			</ul>
+
+			<h4>Games</h4>
+			<ul ng-repeat="x in $ctrl.character.games">
+				<li>{{x.name}}</li>
+			</ul>
+		    
+		</div>
+		<div class="modal-footer">
+		    <button class="btn btn-primary" type="button" ng-click="$ctrl.cancel()">OK</button>
+		</div>
+	</script>
+
+  	<div ng-controller="characterCtrl">	
+
+  		<nav class="navbar navbar-fixed-top navbar-dark" style="background-color:rgba( 51 , 122 , 183 , 0.8 )">
 		  	<div class="container-fluid">
 		    	<div class="navbar-header">
 		      		<a class="navbar-brand" href="#">CharacterBomb</a>
@@ -37,9 +76,9 @@
 		    	</ul>
 		    	<form class="navbar-form navbar-right">
 				  	<div class="input-group">
-				    	<input type="text" class="form-control" placeholder="Search">
+				    	<input type="text" class="form-control" placeholder="Search" ng-model="search_value">
 				    <div class="input-group-btn">
-				     	<button class="btn btn-default" type="submit">
+				     	<button class="btn btn-default" type="submit" ng-click="search()">
 				        	<i class="glyphicon glyphicon-search"></i>
 				    	</button>
 				    </div>
@@ -48,7 +87,9 @@
 		  	</div>
 		</nav>
 
-  		<section class="container" ng-controller="characterCtrl">
+		
+
+  		<section class="container content-section">
 
   			<div ng-repeat="x in games">
 
@@ -59,22 +100,32 @@
 
 	  			<!-- Card deck wrapper for each game row -->
 	  			<div class="row">
-	  				<!--<div class="card-deck">-->
+	  			
 	  					<div ng-repeat="y in x.characters">
 
 		  					<!-- the structure for each character card -->
 		  					<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
-			  				<div class="card character-card">
-			  					<img class="card-img-top img-responsive character-image" src="{{y.image.super_url}}" alt="Card image cap">
-							    <div class="card-block">
-								    <h4 class="card-title">{{y.name}}</h4>
-							    </div>
-			  				</div>
+				  				<div class="card" ng-click="openModal(y)">
+				  					<img class="img-responsive center-cropped" src="{{y.image.super_url}}" >
+				  					<div class="card-title ellipsis">
+								    	<p>{{y.name | uppercase}}</p>
+							    	</div>
+				  				</div>	
 			  				</div>
 
 		  				</div>
 
-	  				<!--</div>-->
+		  				<!-- The get more card -->
+		  				<div class="col-lg-3 col-md-4 col-sm-6 col-xs-12">
+			  				<div class="card" ng-click="getMoreCharacters( x.name )" ng-show="x.getMore">
+			  					<img class="img-responsive center-cropped" src=" http://placehold.it/300" >
+			  					<div class="get-more-title">
+							    	<p>GET MORE</p>
+						    	</div>
+			  				</div>	
+		  				</div>
+			  				
+		  				<!-- End of character card rows -->
 	  			</div>
   			</div>
   		</section>
