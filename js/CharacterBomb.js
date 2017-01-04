@@ -1,6 +1,6 @@
 
 var MAX_GAMES = 6;
-var MAX_CHARACTERS = 4;
+var MAX_CHARACTERS = 3;
 
 var games_array =[];
 
@@ -11,26 +11,113 @@ class Game {
 		this.name = name;
 		this.url = detail_url;
 		this.characters = [];
+		this.shown_characters = 0;
+		this.total_characters = 0;
+		this.getMore = true;
 	}
 
 	addCharacter( character ){
+
+		if( character.gender == 0 ){
+			character.gender = 'Other';
+		}
+		else if( character.gender == 1 ){
+			character.gender = 'Male';
+		}
+		else if( character.gender == 2 ){
+			character.gender = 'Female';
+		}
+		else{
+			character.gender = 'Unknown';
+		}
+		
 		this.characters.push( character );
+		this.shown_characters = this.characters.length;
+
+		if( this.shown_characters >= this.total_characters ){
+			this.getMore = false;
+		}
 	}
 }
 
 
-var app = angular.module( 'CharacterBomb' , [] );
+var app = angular.module( 'CharacterBomb' , ['ui.bootstrap'] );
 
 
-app.controller( 'characterCtrl' , function( $scope , getContent ) {
+app.controller( 'characterCtrl' , function( $scope , getContent , $uibModal ) {
 	
 	$scope.games = [];
+	$scope.search_value = "";
 
-	$scope.games = getContent.getGames( "mass effect" , $scope.games , 5 , function( games ){
+	$scope.games = getContent.getGames( "metroid" , $scope.games , 5 , function( games ){
 		$scope.games = games;
 	});
 
+
+	$scope.search = function(){
+		$scope.games = [];
+		$scope.games = getContent.getGames( $scope.search_value , $scope.games , 5 , function( games ){
+			$scope.games = games;
+		});
+	};
+
+	$scope.getMoreCharacters = function( game_name ){
+
+		if( game_name == "" ){
+			return;
+		}
+
+		var game = null;
+
+		jQuery.each( $scope.games , function( index , value ){
+			if( value.name == game_name ){
+				game = value;
+				console.log( "index name = " + game.name );
+			}
+		} );
+
+		if( game == null ){
+			return;
+		}
+
+		for( i = 0 ; i < MAX_CHARACTERS ; i++ ){
+			getContent.getSingleGame( game , function(){} );
+		}
+	};
+
+	var $ctrl = this;
+	$scope.openModal = function( character ){
+
+		$ctrl.character = character;
+
+		var modalInstance = $uibModal.open({
+	      animation: true,
+	      ariaLabelledBy: '$modal-title',
+	      ariaDescribedBy: 'modal-body',
+	      templateUrl: 'myModalContent.html',
+	      controller: 'ModalInstanceCtrl',
+	      controllerAs: '$ctrl',
+	      size: 'lg',
+	      
+	      resolve: {
+	        character: function(){
+	        	return $ctrl.character;
+	        }
+	      }
+	});
+	};
 	
+});
+
+angular.module('CharacterBomb').controller('ModalInstanceCtrl', function ($uibModalInstance , character) {
+
+  	var $ctrl = this;
+  	$ctrl.character = character;
+
+
+	$ctrl.cancel = function(){
+		$uibModalInstance.dismiss('cancel');
+	};
 });
 
 app.service( 'getContent' , function( $http ){
@@ -75,11 +162,24 @@ app.service( 'getContent' , function( $http ){
 		$http.jsonp( game_url )
 			.success( function( data ){
 
+				
+				game.total_characters = data.results.characters.length;
+
+				var index = game.shown_characters;
+
 				//For each character in the returned JSON, add the character to the Game's character array
 				for( i = 0 ; i < MAX_CHARACTERS ; i++ ){
-					self.getCharacter( game , data.results.characters[i].api_detail_url , function(){
+
+					if( game.shown_characters >= data.results.characters.length ){
+						break;
+					}
+
+					self.getCharacter( game , data.results.characters[index].api_detail_url , function(){
 
 					});
+
+					game.shown_characters++;
+					index++;
 				}
 				
 				//return back to the caller when all done
